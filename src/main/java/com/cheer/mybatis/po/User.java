@@ -1,6 +1,7 @@
 package com.cheer.mybatis.po;
 
 import java.util.Date;
+import java.util.List;
 
 public class User {
     //属性名和数据库表的字段对应
@@ -9,6 +10,27 @@ public class User {
     private String sex;// 性别
     private Date birthday;// 生日
     private String address;// 地址
+    private List<Order>  orderList;
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", sex='" + sex + '\'' +
+                ", birthday=" + birthday +
+                ", address='" + address + '\'' +
+                ", orderList=" + orderList +
+                '}';
+    }
+
+    public List<Order> getOrderList() {
+        return orderList;
+    }
+
+    public void setOrderList(List<Order> orderList) {
+        this.orderList = orderList;
+    }
 
     public User(){
 
@@ -52,9 +74,5 @@ public class User {
     public void setAddress(String address) {
         this.address = address;
     }
-    @Override
-    public String toString() {
-        return "User [id=" + id + ", username=" + username + ", sex=" + sex
-                + ", birthday=" + birthday + ", address=" + address + "]";
-    }
+
 }

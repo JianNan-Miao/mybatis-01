@@ -7,6 +7,71 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 注意：使用mapper代理方法开发，namespace有特殊重要的作用
 -->
 <mapper namespace="com.cheer.mybatis.mapper.UserMapper">
+   <!--订单查询关联用户的resultmap-->
+	<resultMap id="orderUserResultMap" type="com.cheer.mybatis.po.Order">
+		<id column="id" property="id" />
+		<result column="user_id"  property="user_id" />
+		<result column="number"   property="number"/>
+		<result column="createtime" property="createtime"/>
+		<result column="note" property="note"/>
+	<!-- 配置映射的关联的用户信息 -->
+	<!--association：用于映射关联查询单个对象的信息-->
+    <association property="user" javaType="com.cheer.mybatis.po.User">
+        <id column="user_id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="sex" property="sex"/>
+        <result column="address" property="address"/>
+
+    </association>
+
+</resultMap>
+
+<!--订单以及订单明细的resultmap-->
+	<resultMap id="OrdersAndOrderDetailResultMap" type="com.cheer.mybatis.po.Order" extends="orderUserResultMap">
+		<collection property="orderDetails" ofType="com.cheer.mybatis.po.OrderDetail">
+			<id column="orderdetail_id" property="id" />
+			<result column="items_id" property="items_id"/>
+			<result column="items_num" property="items_num"/>
+			<result column="orsers_id" property="orders_id"/>
+		</collection>
+	</resultMap>
+
+
+	<!--查询用户以及购买的商品的resultmap-->
+	<resultMap id="UserAndItemsResultMap" type="com.cheer.mybatis.po.User">
+		<id column="user_id" property="id" />
+		<result column="username" property="username"/>
+		<result column="sex" property="sex"/>
+		<result column="address" property="address"/>
+		<collection property="orderList" ofType="com.cheer.mybatis.po.Order">
+			<id column="id" property="id"/>
+			<result column="user_id"  property="user_id"/>
+			<result column="number"  property="number"/>
+			<result column="createtime" property="createtime"/>
+			<result column="note" property="note"/>
+			<collection property="orderDetails" ofType="com.cheer.mybatis.po.OrderDetail">
+                 <id column="orderdetail_id" property="id"/>
+				<result  column="items_id" property="items_id"/>
+				<result column="items_num" property="items_num"/>
+				<result column="orders_id" property="orders_id"/>
+				<association property="items" javaType="com.cheer.mybatis.po.Items">
+					<id column="items_id" property="id"/>
+					<result column="items_name" property="name"/>
+					<result column="items_detail" property="detail"/>
+					<result column="items_price" property="price"/>
+				</association>
+
+			</collection>
+		</collection>
+	</resultMap>
+	
+	
+	<select id="findUserList" parameterType="com.cheer.mybatis.po.UserQueryVo"
+			resultType="com.cheer.mybatis.po.UserCustom">
+		select * from user  where user.sex=#{userCustom.sex}  and user.username like '%${userCustom.username}%'
+	</select>
+
+
 
 	<!-- 在 映射文件中配置很多sql语句 -->
 	<!-- 需求：通过id查询用户表的记录 -->
@@ -32,11 +97,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	<select id="findUserByName" parameterType="java.lang.String" resultType="com.cheer.mybatis.po.User">
 		SELECT * FROM USER WHERE username LIKE '%${value}%'
 	</select>
-	
-	<!-- 添加用户 
-	parameterType：指定输入 参数类型是pojo（包括 用户信息）
-	#{}中指定pojo的属性名，接收到pojo对象的属性值，mybatis通过OGNL获取对象的属性值
-	-->
+
+
+
+
+    <!-- 添加用户
+    parameterType：指定输入 参数类型是pojo（包括 用户信息）
+    #{}中指定pojo的属性名，接收到pojo对象的属性值，mybatis通过OGNL获取对象的属性值
+    -->
 	<insert id="insertUser" parameterType="com.cheer.mybatis.po.User">
 		<!-- 
 		将插入数据的主键返回，返回到user对象中
@@ -83,7 +151,51 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		update user set username=#{username},birthday=#{birthday},sex=#{sex},address=#{address} 
 		 where id=#{id}
 	</update>
-	
+
+	<select id="findOrderUser" resultMap="orderUserResultMap">
+		select orders.*,`user`.username,`user`.sex,user.address from user,orders where orders.user_id=`user`.id;
+	</select>
+
+
+	<select id="findOrdersAndOrderDetailResultMap" resultMap="OrdersAndOrderDetailResultMap">
+		SELECT
+		  orders.*,
+		  USER.username,
+		  USER.sex,
+		  USER.address,
+		  orderdetail.id orderdetail_id,
+		  orderdetail.items_id,
+		  orderdetail.items_num,
+		  orderdetail.orders_id
+		FROM
+		  orders,
+		  USER,
+		  orderdetail
+		WHERE orders.user_id = user.id AND orderdetail.orders_id=orders.id
+	</select>
+
+
+	<select id="findUserAndItemsResultMap" resultMap="UserAndItemsResultMap">
+		SELECT
+		  orders.*,
+		  USER.username,
+		  USER.sex,
+		  USER.address,
+		  orderdetail.id orderdetail_id,
+		  orderdetail.items_id,
+		  orderdetail.items_num,
+		  orderdetail.orders_id,
+		  items.name items_name,
+		  items.detail items_detail,
+		  items.price items_price
+		FROM
+		  orders,
+		  USER,
+		  orderdetail,
+		  items
+		WHERE orders.user_id = user.id AND orderdetail.orders_id=orders.id AND orderdetail.items_id = items.id
+	</select>
+
 </mapper>
 
 
