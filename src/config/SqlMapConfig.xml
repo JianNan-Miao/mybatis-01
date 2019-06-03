@@ -39,5 +39,6 @@ PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
 		 -->
 		<!--<package name="com.cheer.mybatis.mapper"/>-->
 	</mappers>
+
 	
 </configuration>
